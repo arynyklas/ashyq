@@ -1,8 +1,8 @@
 from requests import Session, Response
 from base64 import b64encode
-from utils import random_string
+from .utils import random_string
 
-from exceptions import AshyqException, RetryException
+from .exceptions import AshyqException, RetryException
 
 from typing import Optional, Union
 
