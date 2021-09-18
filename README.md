@@ -34,7 +34,7 @@ print(ashyq.user)
 
 ### Moar!
 
-You can find more examples in [`examples/`](https://github.com/arynyklas/ashyq/blob/main/examples) directory
+You can find more examples in [`examples/`](https://github.com/arynyklas/ashyq/blob/master/examples) directory
 
 </details>
 
