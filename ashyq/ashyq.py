@@ -22,6 +22,8 @@ class Ashyq:
         self.access_token: str = None
         self.refresh_token: str = None
 
+        self.logged_on: bool = False
+
         self.auth_token: str = 'Basic {}'.format(
             b64encode(
                 bytes('ad3c48bd01f571d9cf74916aec79a619c991659f1129e2f2e31734bb8927f08e407d7eab', 'utf-8')
@@ -32,7 +34,7 @@ class Ashyq:
 
         self._session: Session = Session()
 
-    def _check_result(self, response: Response) -> Union[Exception, dict]:
+    def _check_result(self, response: Response) -> dict:
         if response.status_code == 401:
             self.refresh()
             raise RetryException
@@ -44,8 +46,10 @@ class Ashyq:
 
         if 'access_token' in json:
             self.access_token = json['access_token']
+            self.logged_on = True
         if 'refresh_token' in json:
             self.refresh_token = json['refresh_token']
+            self.logged_on = True
 
         self.auth_token = 'Bearer {}'.format(self.access_token)
 
