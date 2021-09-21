@@ -13,7 +13,7 @@ ashyq.new_install()
 i = 1
 
 while i <= 9999:
-    code = '{:04}'.format(9999)
+    code = '{:04}'.format(i)
 
     try:
         # Join by received SMS
