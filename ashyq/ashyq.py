@@ -16,11 +16,11 @@ class URL:
 
 
 class Ashyq:
-    def __init__(self, phone_number: str, device_id: Optional[str]=random_string(16)):
+    def __init__(self, phone_number: str, device_id: str=random_string(16), access_token: str=None, refresh_token: str=None):
         self.phone_number: str = phone_number
 
-        self.access_token: str = None
-        self.refresh_token: str = None
+        self._access_token: str = access_token
+        self.refresh_token: str = refresh_token
 
         self.logged_on: bool = False
 
@@ -34,6 +34,14 @@ class Ashyq:
 
         self._session: Session = Session()
 
+    def _access_token_getter(self):
+        return self._access_token
+
+    def _access_token_setter(self, val: str):
+        self._access_token = val
+        self.auth_token = 'Bearer {}'.format(self.access_token)
+        self.logged_on = True
+
     def _check_result(self, response: Response) -> dict:
         if response.status_code == 401:
             self.refresh()
@@ -46,12 +54,8 @@ class Ashyq:
 
         if 'access_token' in json:
             self.access_token = json['access_token']
-            self.logged_on = True
         if 'refresh_token' in json:
             self.refresh_token = json['refresh_token']
-            self.logged_on = True
-
-        self.auth_token = 'Bearer {}'.format(self.access_token)
 
         return json
 
@@ -59,14 +63,22 @@ class Ashyq:
         try:
             return self._check_result(
                 self._session.request(
-                    method, url, data=data, headers=headers, json=json
+                    url     = url,
+                    data    = data,
+                    headers = headers,
+                    json    = json,
+                    method  = method
                 )
             )
 
         except RetryException:
             return self._check_result(
                 self._session.request(
-                    method, url, data=data, headers=headers, json=json
+                    url     = url,
+                    data    = data,
+                    headers = headers,
+                    json    = json,
+                    method  = method
                 )
             )
 
@@ -143,3 +155,5 @@ class Ashyq:
                 'Authorization': self.auth_token
             }, method='POST'
         )
+
+    access_token = property(_access_token_getter, _access_token_setter)

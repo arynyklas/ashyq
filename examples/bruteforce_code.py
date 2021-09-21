@@ -23,10 +23,14 @@ while i <= 9999:
         break
 
     except exceptions.AshyqException:
-        print('Passed {}'.format(code))
+        print('Passed:', code)
         i += 1
 
 
 if ashyq.logged_on:
-    print(ashyq.access_token, ashyq.refresh_token)
-    print(ashyq.user)
+    print('Logged on!')
+
+    print('Device ID:', ashyq.device_id)
+    print('Access token:', ashyq.access_token)
+    print('Refresh token:', ashyq.refresh_token)
+    print('User info:', ashyq.user)
