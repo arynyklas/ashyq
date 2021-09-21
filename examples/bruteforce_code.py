@@ -3,7 +3,7 @@ from ashyq import Ashyq, exceptions
 
 # Init class and set phone number
 phone_number = input('Input phone number: ')
-ashyq = Ashyq()
+ashyq = Ashyq(phone_number)
 
 
 # SMS (login) request
@@ -23,6 +23,7 @@ while i <= 9999:
         break
 
     except exceptions.AshyqException:
+        print('Passed {}'.format(code))
         i += 1
 
 
