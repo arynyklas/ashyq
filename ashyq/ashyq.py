@@ -1,7 +1,7 @@
 from requests import Session, Response
 from base64 import b64encode
-from .utils import random_string
 
+from .utils import random_string
 from .exceptions import AshyqException, RetryException
 
 from typing import Optional, Union
@@ -24,22 +24,20 @@ class Ashyq:
 
         self.logged_on: bool = False
 
-        self.auth_token: str = 'Basic {}'.format(
-            b64encode(
-                bytes('ad3c48bd01f571d9cf74916aec79a619c991659f1129e2f2e31734bb8927f08e407d7eab', 'utf-8')
-            )
-        )
-
         self.device_id: str = device_id
 
         self._session: Session = Session()
+
+        self._session.headers['Authorization'] = b64encode(
+            bytes('ad3c48bd01f571d9cf74916aec79a619c991659f1129e2f2e31734bb8927f08e407d7eab', 'utf-8')
+        )
 
     def _access_token_getter(self):
         return self._access_token
 
     def _access_token_setter(self, val: str):
         self._access_token = val
-        self.auth_token = 'Bearer {}'.format(self.access_token)
+        self._session.headers['Authorization'] = 'Bearer {}'.format(self.access_token)
         self.logged_on = True
 
     def _check_result(self, response: Response) -> dict:
@@ -99,8 +97,6 @@ class Ashyq:
                 'scope': 'api offline_access',
                 'acr_values': 'DeviceId={}&LoginType=PhoneNumber&'.format(self.device_id),
                 'grant_type': 'refresh_token'
-            }, headers={
-                'Authorization': self.auth_token
             }, method='POST'
         )
 
@@ -112,16 +108,12 @@ class Ashyq:
                 'scope': 'api offline_access',
                 'acr_values': 'DeviceId={}&LoginType=PhoneNumber&'.format(self.device_id),
                 'grant_type': 'password'
-            }, headers={
-                'Authorization': self.auth_token
             }, method='POST'
         )
 
     def get_user(self) -> dict:
         return self._request(
-            URL.user, headers={
-                'Authorization': self.auth_token
-            }, method='GET'
+            URL.user, method='GET'
         )
 
     @property
@@ -140,8 +132,6 @@ class Ashyq:
                 'Lang': 'ru',
                 'OfficeRKA': '1',
                 'Type': 'entry'
-            }, headers={
-                'Authorization': self.auth_token
             }, method='POST'
         )
 
@@ -151,8 +141,6 @@ class Ashyq:
                 'IIN': iin,
                 'Lang': 'ru',
                 'Type': 'entry'
-            }, headers={
-                'Authorization': self.auth_token
             }, method='POST'
         )
 

@@ -28,7 +28,7 @@ while i <= 9999:
 
 
 if ashyq.logged_on:
-    print('Logged on!')
+    print('Logged on with code {}!'.format(code))
 
     print('Device ID:', ashyq.device_id)
     print('Access token:', ashyq.access_token)
