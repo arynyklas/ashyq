@@ -1,22 +1,22 @@
-from requests import Session, Response
-from base64 import b64encode
+from . import types
+from .drivers.base import BaseDriver
+from .utils import random_string, to_object
 
-from .utils import random_string
-from .exceptions import AshyqException, RetryException
+from base64 import b64encode
 
 from typing import Optional, Union
 
 
-class URL:
-    new_install = 'https://ashyq.curs.kz/ashyq/v2/api/otp/newInstall'
-    connect = 'https://ashyq.curs.kz/ashyq/identity/connect/token'
-    user = 'https://ashyq.curs.kz/ashyq/v2/api/user'
-    qrpass = 'https://ashyq.curs.kz/ashyq/v2/api/qrpass/check'
-    employee_check = 'https://ashyq.curs.kz/ashyq/v2/api/qrpass/employee/check'
-
-
 class Ashyq:
-    def __init__(self, phone_number: str, device_id: str=random_string(16), access_token: str=None, refresh_token: str=None):
+    _user: types.User = None
+
+    def __init__(self, driver: BaseDriver, phone_number: str, device_id: str=random_string(16), access_token: str=None, refresh_token: str=None):
+        """
+        #TODO: add typing
+        """
+        self._driver: BaseDriver = driver
+        self._driver.main = self
+
         self.phone_number: str = phone_number
 
         self._access_token: str = access_token
@@ -26,106 +26,106 @@ class Ashyq:
 
         self.device_id: str = device_id
 
-        self._session: Session = Session()
-
-        self._session.headers['Authorization'] = b64encode(
+        self._driver._session.headers['Authorization'] = b64encode(
             bytes('ad3c48bd01f571d9cf74916aec79a619c991659f1129e2f2e31734bb8927f08e407d7eab', 'utf-8')
-        )
+        ).decode()
+
+        self._driver.open()
 
     def _access_token_getter(self):
         return self._access_token
 
     def _access_token_setter(self, val: str):
         self._access_token = val
-        self._session.headers['Authorization'] = 'Bearer {}'.format(self.access_token)
+        self._driver._session.headers['Authorization'] = 'Bearer {}'.format(self.access_token)
         self.logged_on = True
 
-    def _check_result(self, response: Response) -> dict:
-        if response.status_code == 401:
-            self.refresh()
-            raise RetryException
-
-        json = response.json()
-
-        if 'Errors' in json:
-            raise AshyqException
-
-        if 'access_token' in json:
-            self.access_token = json['access_token']
-        if 'refresh_token' in json:
-            self.refresh_token = json['refresh_token']
-
-        return json
-
     def _request(self, url: str, data: Optional[dict]=None, headers: Optional[dict]=None, json: Optional[dict]=None, method: str='GET') -> dict:
-        try:
-            return self._check_result(
-                self._session.request(
-                    url     = url,
-                    data    = data,
-                    headers = headers,
-                    json    = json,
-                    method  = method
-                )
-            )
+        return self._driver.request(
+            url     = url,
+            data    = data,
+            headers = headers,
+            json    = json,
+            method  = method
+        )
 
-        except RetryException:
-            return self._check_result(
-                self._session.request(
-                    url     = url,
-                    data    = data,
-                    headers = headers,
-                    json    = json,
-                    method  = method
-                )
-            )
+    def new_install(self) -> types.Code:
+        """Sends an SMS code to log in to your account.
 
-    def new_install(self) -> dict:
-        return self._request(
-            URL.new_install, json={
+        :return: On success, a server response is returned
+        :rtype: :obj:`types.Code`
+        """
+        return to_object(self._request(
+            types.URL.new_install, json={
                 'deviceId': self.device_id,
                 'noSms': False,
                 'phoneNumber': self.phone_number
             }, method='POST'
-        )
+        ), types.Code, snake=True)
 
-    def refresh(self) -> dict:
-        return self._request(
-            URL.connect, data={
-                'username': self.phone_number,
-                'refresh_token': self.refresh_token,
-                'scope': 'api offline_access',
-                'acr_values': 'DeviceId={}&LoginType=PhoneNumber&'.format(self.device_id),
-                'grant_type': 'refresh_token'
-            }, method='POST'
-        )
+    def connect(self, code: Union[int, str]) -> types.Connect:
+        """Sends a request with an SMS code to access the account.
 
-    def connect(self, code: Union[int, str]) -> dict:
-        return self._request(
-            URL.connect, data={
+        :return: On success, login tokens is returned
+        :rtype: :obj:`types.Connect`
+        """
+        return to_object(self._request(
+            types.URL.connect, data={
                 'username': self.phone_number,
                 'password': code,
                 'scope': 'api offline_access',
                 'acr_values': 'DeviceId={}&LoginType=PhoneNumber&'.format(self.device_id),
                 'grant_type': 'password'
             }, method='POST'
-        )
+        ), types.Connect, snake=True)
 
-    def get_user(self) -> dict:
-        return self._request(
-            URL.user, method='GET'
-        )
+    def refresh(self) -> types.Connect:
+        """Updates the access token and updates the token for account access.
+
+        :return: On success, updated tokens is returned
+        :rtype: :obj:`types.Connect`
+        """
+        return to_object(self._request(
+            types.URL.connect, data={
+                'username': self.phone_number,
+                'refresh_token': self.refresh_token,
+                'scope': 'api offline_access',
+                'acr_values': 'DeviceId={}&LoginType=PhoneNumber&'.format(self.device_id),
+                'grant_type': 'refresh_token'
+            }, method='POST'
+        ), types.Connect, snake=True)
+
+    def get_user(self) -> types.User:
+        """Gets information about the logged-in user.
+
+        :return: On success, loginned user is returned
+        :rtype: :obj:`types.User`
+        """
+        return to_object(self._request(
+            types.URL.user, method='GET'
+        ), types.User, snake=False)
 
     @property
-    def user(self) -> dict:
-        if not hasattr(self, '_user'):
-            setattr(self, '_user', self.get_user())
+    def user(self) -> types.User:
+        """Gets information about the logged-in user.
+        Caches user information.
 
-        return getattr(self, '_user')
+        :return: On success, loginned user is returned
+        :rtype: :obj:`types.User`
+        """
+        if not self._user:
+            self._user = self.get_user()
 
-    def user_pcr(self) -> dict:
-        return self._request(
-            URL.qrpass, json={
+        return self._user
+
+    def user_pcr(self) -> types.Check:
+        """Gets information about the PCR of the logged-in user's.
+
+        :return: On success, loginned user user's PCR information is returned
+        :rtype: :obj:`types.User`
+        """
+        return to_object(self._request(
+            types.URL.qrpass, json={
                 'BIN': '000000000012',
                 'BuildingRKA': '0011',
                 'Code': 'android',
@@ -133,15 +133,24 @@ class Ashyq:
                 'OfficeRKA': '1',
                 'Type': 'entry'
             }, method='POST'
-        )
+        ), types.Check, snake=False)
 
-    def pcr(self, iin: str) -> dict:
-        return self._request(
-            URL.employee_check, json={
+    def pcr(self, iin: str) -> types.Check:
+        """Gets information about the PCR of the any user by his IIN.
+        WARNING: works if user is security officer
+
+        :return: On success, user's PCR information is returned
+        :rtype: :obj:`types.Check`
+        """
+        return to_object(self._request(
+            types.URL.employee_check, json={
                 'IIN': iin,
                 'Lang': 'ru',
                 'Type': 'entry'
             }, method='POST'
-        )
+        ), types.Check, snake=False)
+
+    def close(self):
+        self._driver.close()
 
     access_token = property(_access_token_getter, _access_token_setter)

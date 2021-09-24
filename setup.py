@@ -49,6 +49,8 @@ setup(
     ],
     install_requires=[
         'requests>=2.26.0',
+        'aiohttp>=3.7.4',
+        'dataclass-factory>=2.11'
     ],
     include_package_data=False,
 )

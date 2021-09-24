@@ -1,9 +1,13 @@
-from ashyq import Ashyq, exceptions
+from ashyq import Ashyq, drivers, exceptions
+
+
+# OR you can use AsyncDriver: drivers.a_sync.AsyncDriver
+driver = drivers.sync.SyncDriver()
 
 
 # Init class and set phone number
 phone_number = input('Input phone number: ')
-ashyq = Ashyq(phone_number)
+ashyq = Ashyq(driver, phone_number)
 
 
 # SMS (login) request
@@ -19,7 +23,7 @@ while i <= 9999:
         # Join by received SMS
         ashyq.connect(code)
 
-        # If succesfully logged_on
+        # On succesfully logged_on
         break
 
     except exceptions.AshyqException:
@@ -30,7 +34,16 @@ while i <= 9999:
 if ashyq.logged_on:
     print('Logged on with code {}!'.format(code))
 
+    print()
+
     print('Device ID:', ashyq.device_id)
     print('Access token:', ashyq.access_token)
     print('Refresh token:', ashyq.refresh_token)
     print('User info:', ashyq.user)
+
+else:
+    print('Code not found')
+    print('Too many account logins were detected')
+
+
+ashyq.close()

@@ -7,7 +7,7 @@
 [![Github issues](https://img.shields.io/github/issues/arynyklas/ashyq.svg?style=flat-square)](https://github.com/arynyklas/ashyq/issues)
 [![MIT License](https://img.shields.io/pypi/l/ashyq.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-**ashyq** is a simple and synchronous framework for Private Ashyq API written in Python 3.7 with [requests](https://github.com/psf/requests). It helps you to get your status in Ashyq faster and simpler.
+**ashyq** is a simple and (a-)synchronous framework for Private Ashyq API written in Python 3.7 with [requests](https://github.com/psf/requests) and [aiohttp](https://github.com/aio-libs/aiohttp). It helps you to get your status in Ashyq faster and simpler.
 
 
 ## Examples
