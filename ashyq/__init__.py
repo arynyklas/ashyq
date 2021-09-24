@@ -5,7 +5,7 @@ from . import utils
 from . import exceptions
 
 
-__version__ = '0.1.0'
+__version__ = '0.1.0.post0'
 
 
 __all__= (

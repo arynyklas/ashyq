@@ -12,7 +12,7 @@ class Ashyq:
 
     def __init__(self, driver: BaseDriver, phone_number: str, device_id: str=random_string(16), access_token: str=None, refresh_token: str=None):
         """
-        #TODO: add typing
+        Base Ashyq class
         """
         self._driver: BaseDriver = driver
         self._driver.main = self
@@ -151,6 +151,11 @@ class Ashyq:
         ), types.Check, snake=False)
 
     def close(self):
+        """
+        Closes driver session
+
+        :return:
+        """
         self._driver.close()
 
     access_token = property(_access_token_getter, _access_token_setter)
