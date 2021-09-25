@@ -20,7 +20,6 @@ class BaseDriver:
             raise RetryException
 
         json = loads(text)
-        print(json)
 
         if 'Errors' in json:
             raise AshyqException
