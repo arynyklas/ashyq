@@ -10,6 +10,16 @@ from typing import Optional, Union
 class Ashyq:
     _user: types.User = None
 
+    def _access_token_getter(self):
+        return self._access_token
+
+    def _access_token_setter(self, val: str):
+        self._access_token = val
+        self._driver._session.headers['Authorization'] = 'Bearer {}'.format(self.access_token)
+        self.logged_on = True
+
+    access_token = property(_access_token_getter, _access_token_setter)
+
     def __init__(self, driver: BaseDriver, phone_number: str, device_id: str=random_string(16), access_token: str=None, refresh_token: str=None):
         """
         Base Ashyq class
@@ -19,7 +29,7 @@ class Ashyq:
 
         self.phone_number: str = phone_number
 
-        self._access_token: str = access_token
+        self.access_token: str = access_token
         self.refresh_token: str = refresh_token
 
         self.logged_on: bool = False
@@ -31,14 +41,6 @@ class Ashyq:
         ).decode()
 
         self._driver.open()
-
-    def _access_token_getter(self):
-        return self._access_token
-
-    def _access_token_setter(self, val: str):
-        self._access_token = val
-        self._driver._session.headers['Authorization'] = 'Bearer {}'.format(self.access_token)
-        self.logged_on = True
 
     def _request(self, url: str, data: Optional[dict]=None, headers: Optional[dict]=None, json: Optional[dict]=None, method: str='GET') -> dict:
         return self._driver.request(
@@ -157,5 +159,3 @@ class Ashyq:
         :return:
         """
         self._driver.close()
-
-    access_token = property(_access_token_getter, _access_token_setter)
