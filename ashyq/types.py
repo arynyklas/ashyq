@@ -28,7 +28,6 @@ class Connect(Schema):
 @dataclass
 class User(Schema):
     id: str
-    iin: str
     entry_scanner: bool
     apartment: Union[str, None]
     building: Union[str, None]
